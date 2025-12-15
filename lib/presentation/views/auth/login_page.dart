@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../../core/constants/app_routes.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -36,26 +37,48 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryColor = Theme.of(context).colorScheme.primary;
+    final bool isTablet = SizerUtil.deviceType == DeviceType.tablet;
+    final double logoSize = isTablet ? 180.0 : 120.0;
+    final double maxWidth = isTablet ? 500.0 : 380.0;
+    final double horizontalPadding = isTablet ? 48.0 : 20.0;
+    final double verticalPadding = isTablet ? 48.0 : 24.0;
+    final double formPadding = isTablet ? 24.0 : 14.0;
+    final double spacing = isTablet ? 32.0 : 28.0;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: BoxConstraints(maxWidth: maxWidth),
               child: Column(
                 children: <Widget>[
                   Image.asset(
                     'assets/logo.png',
-                    width: 120,
-                    height: 120,
+                    width: logoSize,
+                    height: logoSize,
                     fit: BoxFit.contain,
+                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                      return Container(
+                        width: logoSize,
+                        height: logoSize,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.business,
+                          size: logoSize * 0.5,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: spacing),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(formPadding),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -77,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ? 'Email is required'
                                 : null,
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: isTablet ? 20.0 : 12.0),
                           _buildInputField(
                             context,
                             label: 'Password',
@@ -100,11 +123,11 @@ class _LoginPageState extends State<LoginPage> {
                                 ? 'Password is required'
                                 : null,
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(height: isTablet ? 24.0 : 16.0),
                           Obx(
                             () => SizedBox(
                               width: double.infinity,
-                              height: 48,
+                              height: isTablet ? 56.0 : 44.0,
                               child: FilledButton(
                                 onPressed: controller.isLoading.value
                                     ? null
@@ -118,11 +141,11 @@ class _LoginPageState extends State<LoginPage> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text('Sign in'),
+                                    : Text('Sign in', style: TextStyle(fontSize: isTablet ? 16.0 : 13.0)),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: isTablet ? 16.0 : 10.0),
                           Obx(
                             () => controller.errorMessage.value == null
                                 ? const SizedBox.shrink()
@@ -141,6 +164,29 @@ class _LoginPageState extends State<LoginPage> {
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
+                          ),
+                          SizedBox(height: isTablet ? 20.0 : 16.0),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text(
+                                'Don\'t have an account? ',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: isTablet ? 16.0 : 14.0,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Get.toNamed(AppRoutes.register),
+                                child: Text(
+                                  'Register',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 16.0 : 14.0,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -168,6 +214,14 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     final Color primaryColor = Theme.of(context).colorScheme.primary;
     final Color surfaceColor = Theme.of(context).colorScheme.surface;
+    final bool isTablet = SizerUtil.deviceType == DeviceType.tablet;
+    final double labelFontSize = isTablet ? 14.0 : 10.sp;
+    final double inputFontSize = isTablet ? 16.0 : 12.sp;
+    final double iconSize = isTablet ? 24.0 : 18.0;
+    final double verticalPadding = isTablet ? 18.0 : 1.4.h;
+    final double horizontalPadding = isTablet ? 16.0 : 3.5.w;
+    final double borderRadius = isTablet ? 14.0 : 10.0;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -175,31 +229,30 @@ class _LoginPageState extends State<LoginPage> {
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Colors.grey[600],
-            fontSize: 11.sp,
+            fontSize: labelFontSize,
           ),
         ),
-        SizedBox(height: 0.8.h),
+        SizedBox(height: isTablet ? 8.0 : 0.6.h),
         Container(
-          
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
           child: TextFormField(
             controller: controller,
             keyboardType: keyboardType,
             obscureText: obscureText,
             validator: validator,
-            style: TextStyle(fontSize: 13.sp),
+            style: TextStyle(fontSize: inputFontSize),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, size: 20, color: primaryColor),
+              prefixIcon: Icon(icon, size: iconSize, color: primaryColor),
               suffixIcon: suffix,
               hintText: hint,
-              hintStyle: TextStyle(fontSize: 13.sp, color: Colors.grey[400]),
+              hintStyle: TextStyle(fontSize: inputFontSize, color: Colors.grey[400]),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
-                vertical: 2.h,
-                horizontal: 4.w,
+                vertical: verticalPadding,
+                horizontal: horizontalPadding,
               ),
             ),
           ),

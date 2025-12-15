@@ -1,5 +1,5 @@
-name: attendance_app
-description: "Attendance management app for tracking employee attendance, shifts, and reports."
+name: sijil
+description: "Sijil - Attendance management app for tracking employee attendance, shifts, and reports."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -44,6 +44,7 @@ dependencies:
   sizer: ^2.0.15
   material_symbols_icons: ^4.2874.0
   shared_preferences: ^2.3.2
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/entities/attendance_record.dart';
 import '../../../domain/entities/attendance_summary.dart';
@@ -190,10 +191,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Drawer _buildDrawer(BuildContext context) {
-    final user = authController.session.value?.user;
-    final bool isAdmin = user?.role == 'admin';
-    final bool isManager = user?.role == 'manager';
-    final bool isAdminOrManager = isAdmin || isManager;
     final Color primaryColor = Theme.of(context).colorScheme.primary;
 
     return Drawer(
@@ -202,7 +199,10 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           children: <Widget>[
             // Header with greeting and name
-            Container(
+            Obx(() {
+              final user = authController.session.value?.user;
+              
+              return Container(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -216,11 +216,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               child: Row(
                 children: <Widget>[
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: primaryColor.withOpacity(0.15),
-                    child: Icon(Symbols.person, color: primaryColor, size: 28),
-                  ),
+                    _buildDrawerAvatar(context, user?.photo, primaryColor),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -250,10 +246,17 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ],
               ),
-            ),
+            );
+            }),
             // Menu Items
             Expanded(
-              child: ListView(
+              child: Obx(() {
+                final user = authController.session.value?.user;
+                final bool isAdmin = user?.role == 'admin';
+                final bool isManager = user?.role == 'manager';
+                final bool isAdminOrManager = isAdmin || isManager;
+                
+                return ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: <Widget>[
                   _drawerItem(
@@ -417,7 +420,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     isLogout: true,
                   ),
                 ],
-              ),
+              );
+              }),
             ),
           ],
         ),
@@ -474,6 +478,58 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _closeDrawer() => _scaffoldKey.currentState?.closeDrawer();
+
+  Widget _buildDrawerAvatar(BuildContext context, String? photo, Color primaryColor) {
+    if (photo != null && photo.trim().isNotEmpty && photo.trim() != 'null') {
+      String imageUrl = photo.trim();
+      
+      // If photo is a relative URL, prepend base URL
+      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+        if (!imageUrl.startsWith('/')) {
+          imageUrl = '/$imageUrl';
+        }
+        imageUrl = '${AppConfig.baseUrl}$imageUrl';
+      }
+      
+      return ClipOval(
+        child: Image.network(
+          imageUrl,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+            return CircleAvatar(
+              radius: 24,
+              backgroundColor: primaryColor.withOpacity(0.15),
+              child: Icon(Symbols.person, color: primaryColor, size: 28),
+            );
+          },
+          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return CircleAvatar(
+              radius: 24,
+              backgroundColor: primaryColor.withOpacity(0.15),
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+              ),
+            );
+          },
+        ),
+      );
+    }
+    
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: primaryColor.withOpacity(0.15),
+      child: Icon(Symbols.person, color: primaryColor, size: 28),
+    );
+  }
 
   Widget _buildSearchAndDate(BuildContext context) {
     return Row(
@@ -772,7 +828,8 @@ class _DashboardPageState extends State<DashboardPage> {
         subtitleStyle ??
         Theme.of(context).textTheme.bodySmall ??
         const TextStyle();
-    final double titleFontSize = (baseTitleStyle.fontSize ?? 20) * (1.0.h / 10);
+    // Increase font size for admin summary numbers
+    final double titleFontSize = (baseTitleStyle.fontSize ?? 20) * (1.0.h / 10) * 1.4;
     final double subtitleFontSize = (baseSubtitleStyle.fontSize ?? 12) * (1.0.h / 10);
 
     return GestureDetector(
@@ -808,6 +865,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     fontSize: isPresent
                         ? (titleFontSize * 0.85)
                         : titleFontSize,
+                    fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -1947,6 +2005,7 @@ class _DashboardPageState extends State<DashboardPage> {
       userName: record.userName,
       employeeNumber: record.userEmployeeNumber,
       userId: record.userId,
+      photo: record.userPhoto,
       avatarBackgroundColor: primaryColor.withOpacity(0.12),
       avatarTextColor: primaryColor,
       subtitle: Wrap(

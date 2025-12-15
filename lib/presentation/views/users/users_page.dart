@@ -112,6 +112,7 @@ class UsersPage extends StatelessWidget {
       userName: user.name,
       employeeNumber: user.employeeNumber?.toString(),
       userId: user.id,
+      photo: user.photo,
       avatarBackgroundColor: roleColor.withValues(alpha: 0.2),
       avatarTextColor: roleColor,
       backgroundColor: Colors.grey.shade100,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../core/config/app_config.dart';
 
 class EmployeeCard extends StatelessWidget {
   const EmployeeCard({
@@ -14,6 +15,7 @@ class EmployeeCard extends StatelessWidget {
     this.backgroundColor,
     this.avatarBackgroundColor,
     this.avatarTextColor,
+    this.photo,
   });
 
   final String userName;
@@ -26,6 +28,7 @@ class EmployeeCard extends StatelessWidget {
   final Color? backgroundColor;
   final Color? avatarBackgroundColor;
   final Color? avatarTextColor;
+  final String? photo;
 
   String get _idLabel {
     if (employeeNumber != null && employeeNumber!.isNotEmpty) {
@@ -62,18 +65,7 @@ class EmployeeCard extends StatelessWidget {
             leading!,
             SizedBox(width: 1.5.w),
           ] else
-            CircleAvatar(
-              radius: 2.0.h,
-              backgroundColor: defaultAvatarBg,
-              child: Text(
-                _userInitial,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: defaultAvatarText,
-                  fontSize: 1.6.h,
-                ),
-              ),
-            ),
+            _buildAvatar(context, defaultAvatarBg, defaultAvatarText),
           SizedBox(width: 1.2.w),
           Expanded(
             child: Column(
@@ -119,6 +111,78 @@ class EmployeeCard extends StatelessWidget {
     }
 
     return cardContent;
+  }
+
+  Widget _buildAvatar(BuildContext context, Color bgColor, Color textColor) {
+    // Debug: Print photo value
+    // print('EmployeeCard photo: $photo for user: $userName');
+    
+    // Check if photo exists and is not empty
+    if (photo != null && photo!.trim().isNotEmpty && photo!.trim() != 'null') {
+      String imageUrl = photo!.trim();
+      
+      // If photo is a relative URL, prepend base URL
+      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+        // Ensure URL starts with /
+        if (!imageUrl.startsWith('/')) {
+          imageUrl = '/$imageUrl';
+        }
+        imageUrl = '${AppConfig.baseUrl}$imageUrl';
+      }
+      
+      return ClipOval(
+        child: Image.network(
+          imageUrl,
+          width: 4.0.h,
+          height: 4.0.h,
+          fit: BoxFit.cover,
+          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+            // Fallback to initial if image fails to load
+            return CircleAvatar(
+              radius: 2.0.h,
+              backgroundColor: bgColor,
+              child: Text(
+                _userInitial,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                  fontSize: 1.6.h,
+                ),
+              ),
+            );
+          },
+          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return CircleAvatar(
+              radius: 2.0.h,
+              backgroundColor: bgColor,
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(textColor),
+              ),
+            );
+          },
+        ),
+      );
+    }
+    
+    return CircleAvatar(
+      radius: 2.0.h,
+      backgroundColor: bgColor,
+      child: Text(
+        _userInitial,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: textColor,
+          fontSize: 1.6.h,
+        ),
+      ),
+    );
   }
 }
 

@@ -132,6 +132,23 @@ class ApiClient {
     if (error.response?.data is Map<String, dynamic>) {
       final Map<String, dynamic> data =
           error.response?.data as Map<String, dynamic>;
+      
+      // Check for validation errors first
+      if (data.containsKey('errors') && data['errors'] is Map<String, dynamic>) {
+        final Map<String, dynamic> errors = data['errors'] as Map<String, dynamic>;
+        // Get first error message
+        if (errors.isNotEmpty) {
+          final String firstKey = errors.keys.first;
+          final dynamic firstError = errors[firstKey];
+          if (firstError is List && firstError.isNotEmpty) {
+            return firstError.first.toString();
+          } else if (firstError is String) {
+            return firstError;
+          }
+        }
+      }
+      
+      // Fallback to general message
       if (data.containsKey('message')) {
         return data['message']?.toString() ?? 'Unexpected server error';
       }

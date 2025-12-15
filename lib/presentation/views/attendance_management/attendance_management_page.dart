@@ -270,7 +270,7 @@ class _AttendanceManagementPageState extends State<AttendanceManagementPage> {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: color,
-                        fontSize: 2.2.h,
+                        fontSize: 3.0.h, // Increased from 2.2.h to make numbers bigger
                       ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -447,6 +447,7 @@ class _AttendanceManagementPageState extends State<AttendanceManagementPage> {
       userName: record.userName,
       employeeNumber: record.userEmployeeNumber,
       userId: record.userId,
+      photo: record.userPhoto,
       onTap: () => _showEditAttendanceDialog(context, record),
       subtitle: Wrap(
         spacing: 1.0.w,

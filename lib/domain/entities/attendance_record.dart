@@ -8,6 +8,7 @@ class AttendanceRecord extends Equatable {
     this.id,
     this.userEmail,
     this.userEmployeeNumber,
+    this.userPhoto,
     this.firstCheckIn,
     this.lastCheckOut,
     this.totalHours,
@@ -24,6 +25,7 @@ class AttendanceRecord extends Equatable {
   final String userName;
   final String? userEmail;
   final String? userEmployeeNumber;
+  final String? userPhoto;
   final String date;
   final String? firstCheckIn;
   final String? lastCheckOut;
@@ -50,6 +52,7 @@ class AttendanceRecord extends Equatable {
         overtimeAmountIqd,
         status,
         isLocked,
+        userPhoto,
       ];
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../domain/entities/team.dart';
 import '../../../domain/entities/team_member.dart';
 import '../../../domain/entities/team_task.dart';
@@ -178,26 +179,15 @@ class TeamDetailPage extends StatelessWidget {
     final bool isManagerRole = member.teamRole.toLowerCase() == 'manager';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       color: Colors.grey.shade100,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: <Widget>[
-            CircleAvatar(
-              radius: 32,
-              backgroundColor: roleColor.withOpacity(0.15),
-              child: Text(
-                member.name.isNotEmpty ? member.name[0].toUpperCase() : 'U',
-                style: TextStyle(
-                  color: roleColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
+            _buildMemberAvatar(context, member, roleColor),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,29 +197,29 @@ class TeamDetailPage extends StatelessWidget {
                       Expanded(
                         child: Text(
                           member.name,
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                         ),
                       ),
                       if (isManagerRole)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
+                            horizontal: 8,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: roleColor.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              Icon(Icons.star, size: 16, color: roleColor),
-                              const SizedBox(width: 6),
+                              Icon(Icons.star, size: 14, color: roleColor),
+                              const SizedBox(width: 4),
                               Text(
                                 'Manager',
                                 style: TextStyle(
                                   color: roleColor,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -239,28 +229,28 @@ class TeamDetailPage extends StatelessWidget {
                       else
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
+                            horizontal: 8,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             member.teamRole.toUpperCase(),
                             style: TextStyle(
                               color: Colors.grey[700],
-                              fontSize: 11,
+                              fontSize: 9,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
 
                   if (member.employeeNumber.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                   ],
                 ],
               ),
@@ -270,13 +260,85 @@ class TeamDetailPage extends StatelessWidget {
                 icon: Icon(
                   Icons.delete_outline,
                   color: Colors.red[400],
-                  size: 24,
+                  size: 20,
                 ),
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 onPressed: () =>
                     _confirmRemoveMember(context, team, member.id, controller),
                 tooltip: 'Remove member',
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMemberAvatar(BuildContext context, TeamMember member, Color roleColor) {
+    // Check if photo exists and is not empty
+    if (member.photo != null && member.photo!.trim().isNotEmpty && member.photo != 'null') {
+      String imageUrl = member.photo!.trim();
+      
+      // If photo is a relative URL, prepend base URL
+      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+        // Ensure URL starts with /
+        if (!imageUrl.startsWith('/')) {
+          imageUrl = '/$imageUrl';
+        }
+        imageUrl = '${AppConfig.baseUrl}$imageUrl';
+      }
+      
+      return ClipOval(
+        child: Image.network(
+          imageUrl,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+            // Fallback to initial if image fails to load
+            return CircleAvatar(
+              radius: 24,
+              backgroundColor: roleColor.withOpacity(0.15),
+              child: Text(
+                member.name.isNotEmpty ? member.name[0].toUpperCase() : 'U',
+                style: TextStyle(
+                  color: roleColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          },
+          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return CircleAvatar(
+              radius: 24,
+              backgroundColor: roleColor.withOpacity(0.15),
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(roleColor),
+              ),
+            );
+          },
+        ),
+      );
+    }
+    
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: roleColor.withOpacity(0.15),
+      child: Text(
+        member.name.isNotEmpty ? member.name[0].toUpperCase() : 'U',
+        style: TextStyle(
+          color: roleColor,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

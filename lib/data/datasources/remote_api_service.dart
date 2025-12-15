@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
@@ -23,6 +24,28 @@ class RemoteApiService {
 
   Future<void> logout() => _client.post('/api/v1/auth/logout');
 
+  Future<JsonMap> register({
+    required String name,
+    required String email,
+    required String password,
+    String? phoneNumber,
+    String? employeeNumber,
+  }) async {
+    final Map<String, dynamic> payload = <String, dynamic>{
+      'name': name,
+      'email': email,
+      'password': password,
+    };
+    if (phoneNumber != null && phoneNumber.isNotEmpty) {
+      payload['phone_number'] = phoneNumber;
+    }
+    if (employeeNumber != null && employeeNumber.isNotEmpty) {
+      payload['employee_number'] = int.tryParse(employeeNumber) ?? employeeNumber;
+    }
+    final dynamic response = await _client.post('/api/v1/auth/register', data: payload);
+    return Map<String, dynamic>.from(response as Map);
+  }
+
   Future<JsonMap> fetchProfile() async {
     final dynamic response = await _client.get('/api/v1/me');
     return Map<String, dynamic>.from(response as Map);
@@ -32,15 +55,147 @@ class RemoteApiService {
     String? name,
     String? email,
     String? password,
+    String? phoneNumber,
+    String? accountNumber,
+    String? walletNumber,
     List<String>? weekendDays,
   }) async {
+    // Profile picture should be uploaded separately using uploadProfilePicture
+    // This method only handles text fields
     final Map<String, dynamic> payload = <String, dynamic>{};
     if (name != null) payload['name'] = name;
     if (email != null) payload['email'] = email;
     if (password != null) payload['password'] = password;
+    if (phoneNumber != null) payload['phone_number'] = phoneNumber;
+    if (accountNumber != null) payload['account_number'] = accountNumber;
+    if (walletNumber != null) payload['wallet_number'] = walletNumber;
     if (weekendDays != null) payload['weekend_days'] = weekendDays;
     final dynamic response = await _client.put('/api/v1/me', data: payload);
     return Map<String, dynamic>.from(response as Map);
+  }
+
+  Future<JsonMap> uploadProfilePicture(String profilePicturePath) async {
+    try {
+      print('📤 Creating FormData for profile picture upload...');
+      print('Image path: $profilePicturePath');
+      print('Image filename: ${profilePicturePath.split('/').last}');
+      
+      final MultipartFile multipartFile = await MultipartFile.fromFile(
+        profilePicturePath,
+        filename: profilePicturePath.split('/').last,
+      );
+      
+      print('✅ MultipartFile created successfully');
+      print('File size: ${multipartFile.length} bytes');
+      
+      final FormData formData = FormData.fromMap(<String, dynamic>{
+        'profile_picture': multipartFile,
+      });
+      
+      print('📡 Sending POST request to /api/v1/me/profile-picture');
+      print('FormData files: ${formData.files.map((e) => e.key).toList()}');
+      
+      final dynamic response = await _client.post('/api/v1/me/profile-picture', data: formData);
+      
+      print('✅ Response received: ${response.runtimeType}');
+      print('Response data: $response');
+      
+      return Map<String, dynamic>.from(response as Map);
+    } catch (e, stackTrace) {
+      print('❌ ERROR in uploadProfilePicture:');
+      print('Error type: ${e.runtimeType}');
+      print('Error message: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<JsonMap> uploadIdDocument(String documentPath, String type) async {
+    try {
+      print('📤 Creating FormData for ID document upload...');
+      print('Document path: $documentPath');
+      print('Document type: $type');
+      print('Document filename: ${documentPath.split('/').last}');
+      
+      final MultipartFile multipartFile = await MultipartFile.fromFile(
+        documentPath,
+        filename: documentPath.split('/').last,
+      );
+      
+      print('✅ MultipartFile created successfully');
+      print('File size: ${multipartFile.length} bytes');
+      
+      // Map the type to API expected format
+      // Based on UserModel fields: id_pic_front, id_pic_back
+      // API expects: id_pic_front, id_pic_back
+      final String apiType = 'id_pic_$type';
+      
+      final FormData formData = FormData.fromMap(<String, dynamic>{
+        'type': apiType,
+        'image': multipartFile,
+      });
+      
+      print('📡 Sending POST request to /api/v1/me/id-document');
+      print('FormData fields: type=$apiType');
+      print('FormData files: ${formData.files.map((e) => e.key).toList()}');
+      
+      final dynamic response = await _client.post('/api/v1/me/id-document', data: formData);
+      
+      print('✅ Response received: ${response.runtimeType}');
+      print('Response data: $response');
+      
+      return Map<String, dynamic>.from(response as Map);
+    } catch (e, stackTrace) {
+      print('❌ ERROR in uploadIdDocument:');
+      print('Error type: ${e.runtimeType}');
+      print('Error message: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<JsonMap> uploadResidentialId(String documentPath, String type) async {
+    try {
+      print('📤 Creating FormData for residential ID upload...');
+      print('Document path: $documentPath');
+      print('Document type: $type');
+      print('Document filename: ${documentPath.split('/').last}');
+      
+      final MultipartFile multipartFile = await MultipartFile.fromFile(
+        documentPath,
+        filename: documentPath.split('/').last,
+      );
+      
+      print('✅ MultipartFile created successfully');
+      print('File size: ${multipartFile.length} bytes');
+      
+      // For residential ID, we need to check what type the API expects
+      // Based on the error, it seems the API expects 'type' and 'image' fields
+      // We'll use 'residential_front' or 'residential_back' as the type
+      final String apiType = 'residential_$type';
+      
+      final FormData formData = FormData.fromMap(<String, dynamic>{
+        'type': apiType,
+        'image': multipartFile,
+      });
+      
+      print('📡 Sending POST request to /api/v1/me/id-document');
+      print('FormData fields: type=$apiType');
+      print('FormData files: ${formData.files.map((e) => e.key).toList()}');
+      
+      final dynamic response = await _client.post('/api/v1/me/id-document', data: formData);
+      
+      print('✅ Response received: ${response.runtimeType}');
+      print('Response data: $response');
+      
+      return Map<String, dynamic>.from(response as Map);
+    } catch (e, stackTrace) {
+      print('❌ ERROR in uploadResidentialId:');
+      print('Error type: ${e.runtimeType}');
+      print('Error message: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<dynamic> getAttendanceByDate(DateTime date) async {

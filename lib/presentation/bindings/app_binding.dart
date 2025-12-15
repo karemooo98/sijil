@@ -35,6 +35,9 @@ import '../../domain/usecases/delete_daily_report_usecase.dart';
 import '../../domain/usecases/delete_user_usecase.dart';
 import '../../domain/usecases/fetch_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
+import '../../domain/usecases/upload_profile_picture_usecase.dart';
+import '../../domain/usecases/upload_id_document_usecase.dart';
+import '../../domain/usecases/upload_residential_id_usecase.dart';
 import '../../domain/usecases/get_all_requests_usecase.dart';
 import '../../domain/usecases/get_all_standalone_tasks_usecase.dart';
 import '../../domain/usecases/get_all_users_usecase.dart';
@@ -55,6 +58,7 @@ import '../../domain/usecases/online_check_out_usecase.dart';
 import '../../domain/usecases/get_request_by_id_usecase.dart';
 import '../../domain/usecases/get_user_by_id_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/update_user_usecase.dart';
 import '../../domain/usecases/add_team_member_usecase.dart';
@@ -162,9 +166,13 @@ class AppBinding extends Bindings {
     );
 
     Get.put(LoginUseCase(Get.find<AuthRepository>()), permanent: true);
+    Get.put(RegisterUseCase(Get.find<AuthRepository>()), permanent: true);
     Get.put(LogoutUseCase(Get.find<AuthRepository>()), permanent: true);
     Get.put(FetchProfileUseCase(Get.find<AuthRepository>()), permanent: true);
     Get.put(UpdateProfileUseCase(Get.find<AuthRepository>()), permanent: true);
+    Get.put(UploadProfilePictureUseCase(Get.find<AuthRepository>()), permanent: true);
+    Get.put(UploadIdDocumentUseCase(Get.find<AuthRepository>()), permanent: true);
+    Get.put(UploadResidentialIdUseCase(Get.find<AuthRepository>()), permanent: true);
     Get.put(RestoreSessionUseCase(Get.find<AuthRepository>()), permanent: true);
     Get.put(
       GetAttendanceByDateUseCase(Get.find<AttendanceRepository>()),
@@ -339,6 +347,7 @@ class AppBinding extends Bindings {
     Get.put(
       AuthController(
         loginUseCase: Get.find(),
+        registerUseCase: Get.find<RegisterUseCase>(),
         logoutUseCase: Get.find(),
         fetchProfileUseCase: Get.find(),
         restoreSessionUseCase: Get.find(),
@@ -450,6 +459,9 @@ class AppBinding extends Bindings {
       ProfileController(
         fetchProfileUseCase: Get.find(),
         updateProfileUseCase: Get.find(),
+        uploadProfilePictureUseCase: Get.find(),
+        uploadIdDocumentUseCase: Get.find(),
+        uploadResidentialIdUseCase: Get.find(),
       ),
       permanent: true,
     );

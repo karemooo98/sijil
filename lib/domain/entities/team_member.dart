@@ -7,6 +7,7 @@ class TeamMember extends Equatable {
     required this.email,
     required this.employeeNumber,
     required this.teamRole,
+    this.photo,
   });
 
   final int id;
@@ -14,8 +15,9 @@ class TeamMember extends Equatable {
   final String email;
   final String employeeNumber;
   final String teamRole; // 'manager' or 'employee'
+  final String? photo;
 
   @override
-  List<Object?> get props => <Object?>[id, name, email, employeeNumber, teamRole];
+  List<Object?> get props => <Object?>[id, name, email, employeeNumber, teamRole, photo];
 }
 

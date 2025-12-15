@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../core/constants/app_routes.dart';
 import '../views/attendance/attendance_page.dart';
 import '../views/auth/login_page.dart';
+import '../views/auth/register_page.dart';
 import '../views/auth/splash_page.dart';
 import '../views/dashboard/dashboard_page.dart';
 import '../views/requests/requests_page.dart';
@@ -17,6 +18,8 @@ import '../views/shifts/shifts_page.dart';
 import '../views/teams/team_detail_page.dart';
 import '../views/teams/teams_page.dart';
 import '../views/profile/profile_page.dart';
+import '../views/profile/edit_profile_page.dart';
+import '../controllers/profile_controller.dart';
 import '../views/attendance_management/attendance_management_page.dart';
 import '../views/onboarding/onboarding_page.dart';
 
@@ -30,6 +33,10 @@ class AppPages {
       page: () => const OnboardingPage(),
     ),
     GetPage<LoginPage>(name: AppRoutes.login, page: () => LoginPage()),
+    GetPage<RegisterPage>(
+      name: AppRoutes.register,
+      page: () => const RegisterPage(),
+    ),
     GetPage<DashboardPage>(
       name: AppRoutes.dashboard,
       page: () => const DashboardPage(),
@@ -76,6 +83,18 @@ class AppPages {
     GetPage<ProfilePage>(
       name: AppRoutes.profile,
       page: () => const ProfilePage(),
+    ),
+    GetPage<EditProfilePage>(
+      name: AppRoutes.editProfile,
+      page: () {
+        final ProfileController controller = Get.find<ProfileController>();
+        final user = controller.profile.value;
+        if (user == null) {
+          Get.back();
+          return const ProfilePage();
+        }
+        return EditProfilePage(user: user);
+      },
     ),
     GetPage<AttendanceManagementPage>(
       name: AppRoutes.attendanceManagement,

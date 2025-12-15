@@ -13,6 +13,7 @@ TeamMemberModel _$TeamMemberModelFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String,
       employeeNumber: json['employee_number'] as String,
       teamRole: json['team_role'] as String,
+      photo: json['photo'] as String?,
     );
 
 Map<String, dynamic> _$TeamMemberModelToJson(TeamMemberModel instance) =>
@@ -22,4 +23,5 @@ Map<String, dynamic> _$TeamMemberModelToJson(TeamMemberModel instance) =>
       'email': instance.email,
       'employee_number': instance.employeeNumber,
       'team_role': instance.teamRole,
+      'photo': instance.photo,
     };

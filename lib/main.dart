@@ -10,7 +10,6 @@ import 'presentation/routes/app_pages.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load preferences with a safe fallback to avoid platform channel crashes.
   final AppPreferences appPreferences = await AppPreferences.load();
   Get.put<AppPreferences>(appPreferences, permanent: true);
   runApp(const AttendanceApp());
@@ -29,7 +28,7 @@ class AttendanceApp extends StatelessWidget {
             DeviceType deviceType,
           ) {
             return GetMaterialApp(
-              title: 'Attendance App',
+              title: 'sijil App',
               debugShowCheckedModeBanner: false,
               initialBinding: AppBinding(),
               initialRoute: AppRoutes.splash,

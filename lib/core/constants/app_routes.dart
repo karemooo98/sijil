@@ -4,6 +4,7 @@ class AppRoutes {
   static const String splash = '/';
   static const String onboarding = '/onboarding';
   static const String login = '/login';
+  static const String register = '/register';
   static const String dashboard = '/dashboard';
   static const String attendance = '/attendance';
   static const String requests = '/requests';
@@ -18,5 +19,6 @@ class AppRoutes {
   static const String users = '/users';
   static const String standaloneTasks = '/standalone-tasks';
   static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
   static const String attendanceManagement = '/attendance-management';
 }

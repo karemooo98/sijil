@@ -7,11 +7,13 @@ import '../../domain/entities/auth_session.dart';
 import '../../domain/usecases/fetch_profile_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/restore_session_usecase.dart';
 
 class AuthController extends GetxController {
   AuthController({
     required this.loginUseCase,
+    required this.registerUseCase,
     required this.logoutUseCase,
     required this.fetchProfileUseCase,
     required this.restoreSessionUseCase,
@@ -19,6 +21,7 @@ class AuthController extends GetxController {
   });
 
   final LoginUseCase loginUseCase;
+  final RegisterUseCase registerUseCase;
   final LogoutUseCase logoutUseCase;
   final FetchProfileUseCase fetchProfileUseCase;
   final RestoreSessionUseCase restoreSessionUseCase;
@@ -37,6 +40,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> initSession() async {
+    try {
     // Ensure preferences are loaded; if the platform channel fails, the
     // AppPreferences class will fall back to in-memory storage.
     if (!appPreferences.hasSeenOnboarding) {
@@ -44,18 +48,25 @@ class AuthController extends GetxController {
       return;
     }
 
-    try {
       isLoading.value = true;
+      errorMessage.value = null;
+      
       final AuthSession? restored = await restoreSessionUseCase();
       session.value = restored;
+      
       if (restored != null) {
+        try {
         await fetchProfile();
+        } catch (_) {
+          // Ignore profile fetch errors, continue with navigation
+        }
         _goTo(AppRoutes.dashboard);
       } else {
         _goTo(AppRoutes.login);
       }
     } catch (error) {
-      errorMessage.value = error.toString();
+      // Clear any error message and navigate to login
+      errorMessage.value = null;
       _goTo(AppRoutes.login);
     } finally {
       isLoading.value = false;
@@ -72,6 +83,32 @@ class AuthController extends GetxController {
       isLoading.value = true;
       final AuthSession newSession = await loginUseCase(
         LoginParams(email: email.trim(), password: password.trim()),
+      );
+      session.value = newSession;
+      Get.offAllNamed(AppRoutes.dashboard);
+    } catch (error) {
+      errorMessage.value = error.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    String? phoneNumber,
+    String? employeeNumber,
+  }) async {
+    try {
+      errorMessage.value = null;
+      isLoading.value = true;
+      final AuthSession newSession = await registerUseCase(
+        name: name.trim(),
+        email: email.trim(),
+        password: password.trim(),
+        phoneNumber: phoneNumber?.trim(),
+        employeeNumber: employeeNumber?.trim(),
       );
       session.value = newSession;
       Get.offAllNamed(AppRoutes.dashboard);
