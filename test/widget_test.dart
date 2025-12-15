@@ -7,11 +7,25 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 
-import 'package:attendance_app/main.dart';
+import 'package:sijil/core/storage/app_preferences.dart';
+import 'package:sijil/main.dart';
 
 void main() {
-  testWidgets('Splash screen displays while session initializes', (WidgetTester tester) async {
+  setUpAll(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    final AppPreferences appPreferences = await AppPreferences.load();
+    Get.put<AppPreferences>(appPreferences, permanent: true);
+  });
+
+  tearDown(() {
+    Get.reset();
+  });
+
+  testWidgets('Splash screen displays while session initializes', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const AttendanceApp());
 
     // Splash screen shows a progress indicator while the AuthController restores a session.
