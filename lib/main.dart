@@ -28,7 +28,7 @@ class AttendanceApp extends StatelessWidget {
             DeviceType deviceType,
           ) {
             return GetMaterialApp(
-              title: 'sijil App',
+              title: 'سجّل | Sijil',
               debugShowCheckedModeBanner: false,
               initialBinding: AppBinding(),
               initialRoute: AppRoutes.splash,

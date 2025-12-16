@@ -1,6 +1,6 @@
 {
-    "name": "attendance_app",
-    "short_name": "attendance_app",
+    "name": "سجّل | Sijil",
+    "short_name": "سجّل",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1F4E3D",
