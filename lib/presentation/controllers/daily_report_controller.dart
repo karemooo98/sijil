@@ -6,6 +6,7 @@ import '../../domain/usecases/delete_daily_report_usecase.dart';
 import '../../domain/usecases/get_all_daily_reports_usecase.dart';
 import '../../domain/usecases/get_my_daily_reports_usecase.dart';
 import '../../domain/usecases/update_daily_report_usecase.dart';
+import 'auth_controller.dart';
 
 class DailyReportController extends GetxController {
   DailyReportController({
@@ -37,7 +38,11 @@ class DailyReportController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadMyReports();
+    // Only load reports if user is authenticated
+    final AuthController authController = Get.find<AuthController>();
+    if (authController.isAuthenticated) {
+      loadMyReports();
+    }
   }
 
   Future<void> loadMyReports({String? date}) async {
@@ -84,8 +89,8 @@ class DailyReportController extends GetxController {
   }) async {
     try {
       isCreating.value = true;
-      errorMessage.value = '';
-      final DailyReport report = await _createDailyReportUseCase(
+      // Don't set errorMessage here - we'll show it in a snackbar instead
+      await _createDailyReportUseCase(
         date: date,
         description: description,
         hoursWorked: hoursWorked,
@@ -93,11 +98,13 @@ class DailyReportController extends GetxController {
         challenges: challenges,
         notes: notes,
       );
-      myReports.insert(0, report);
+      // Refresh reports list to get the latest data from server
+      await loadMyReports();
       return true;
     } catch (e) {
-      errorMessage.value = e.toString().replaceAll('Exception: ', '');
-      return false;
+      // Re-throw the error so the UI can catch it and show in snackbar
+      // Don't set errorMessage to avoid replacing the reports list
+      rethrow;
     } finally {
       isCreating.value = false;
     }

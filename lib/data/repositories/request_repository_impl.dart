@@ -37,13 +37,37 @@ class RequestRepositoryImpl implements RequestRepository {
     final JsonMap payload = <String, dynamic>{
       'type': type,
       'reason': reason,
-      if (date != null) 'date': date,
-      if (startDate != null) 'start_date': startDate,
-      if (endDate != null) 'end_date': endDate,
-      if (checkIn != null) 'check_in': checkIn,
-      if (checkOut != null) 'check_out': checkOut,
-      if (leaveType != null) 'leave_type': leaveType,
     };
+
+    // Add fields based on request type
+    if (type == 'day_off') {
+      // Day off: only type, date, and reason
+      if (date != null) {
+        payload['date'] = date;
+      }
+    } else if (type == 'leave') {
+      // Leave: type, reason, start_date, end_date, leave_type
+      if (startDate != null) {
+        payload['start_date'] = startDate;
+      }
+      if (endDate != null) {
+        payload['end_date'] = endDate;
+      }
+      if (leaveType != null) {
+        payload['leave_type'] = leaveType;
+      }
+    } else if (type == 'attendance_correction') {
+      // Attendance correction: type, reason, date, check_in, check_out
+      if (date != null) {
+        payload['date'] = date;
+      }
+      if (checkIn != null) {
+        payload['check_in'] = checkIn;
+      }
+      if (checkOut != null) {
+        payload['check_out'] = checkOut;
+      }
+    }
 
     final Map<String, dynamic> response = await _api.createRequest(payload);
     final Map<String, dynamic> data = response.containsKey('data')

@@ -6,6 +6,7 @@ import '../../domain/usecases/get_notifications_usecase.dart';
 import '../../domain/usecases/mark_all_notifications_read_usecase.dart';
 import '../../domain/usecases/mark_notification_read_usecase.dart';
 import '../../domain/usecases/send_notification_usecase.dart';
+import 'auth_controller.dart';
 
 class NotificationController extends GetxController {
   NotificationController({
@@ -33,7 +34,11 @@ class NotificationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadNotifications();
+    // Only load notifications if user is authenticated
+    final AuthController authController = Get.find<AuthController>();
+    if (authController.isAuthenticated) {
+      loadNotifications();
+    }
   }
 
   Future<void> loadNotifications() async {

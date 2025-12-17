@@ -53,5 +53,9 @@
 	<string>We need access to your camera to take a photo for your profile picture.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need access to save photos to your library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need access to your location to record your check-in and check-out location.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need access to your location to record your check-in and check-out location.</string>
 </dict>
 </plist>

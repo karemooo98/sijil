@@ -5,6 +5,7 @@ import '../../domain/usecases/approve_standalone_task_usecase.dart';
 import '../../domain/usecases/create_standalone_task_usecase.dart';
 import '../../domain/usecases/get_all_standalone_tasks_usecase.dart';
 import '../../domain/usecases/get_my_standalone_tasks_usecase.dart';
+import 'auth_controller.dart';
 
 class StandaloneTaskController extends GetxController {
   StandaloneTaskController({
@@ -33,7 +34,11 @@ class StandaloneTaskController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadMyTasks();
+    // Only load tasks if user is authenticated
+    final AuthController authController = Get.find<AuthController>();
+    if (authController.isAuthenticated) {
+      loadMyTasks();
+    }
   }
 
   Future<void> loadMyTasks() async {
@@ -67,18 +72,19 @@ class StandaloneTaskController extends GetxController {
     required String title,
     required String date,
     required double reportedHours,
-    String? description,
+    required String description,
   }) async {
     try {
       isCreating.value = true;
       errorMessage.value = '';
-      final StandaloneTask task = await _createTaskUseCase(
+      await _createTaskUseCase(
         title: title,
         date: date,
         reportedHours: reportedHours,
         description: description,
       );
-      myTasks.insert(0, task);
+      // Refresh tasks list to get the latest data from server
+      await loadMyTasks();
       return true;
     } catch (e) {
       errorMessage.value = e.toString().replaceAll('Exception: ', '');

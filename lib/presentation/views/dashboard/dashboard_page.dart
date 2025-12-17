@@ -12,6 +12,7 @@ import '../../../domain/entities/shift.dart';
 import '../../../domain/entities/user_request.dart';
 import '../../controllers/attendance_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/daily_report_controller.dart';
 import '../../controllers/request_controller.dart';
 import '../../controllers/self_attendance_controller.dart';
 import '../../controllers/shift_controller.dart';
@@ -65,10 +66,16 @@ class _DashboardPageState extends State<DashboardPage> {
         // Admin who can also be employee - default to admin view
         _viewAsEmployee = false;
         _loadUsersOnLeave();
+        // Also load reports in case admin switches to employee view
+        final DailyReportController reportController = Get.find<DailyReportController>();
+        reportController.loadMyReports();
       } else if (selfAttendanceController.isEmployee) {
         // Regular employee
         selfAttendanceController.refreshAll();
         shiftController.loadMyShift();
+        // Load daily reports for checkout check
+        final DailyReportController reportController = Get.find<DailyReportController>();
+        reportController.loadMyReports();
       } else if (isAdmin) {
         // Admin only (not employee)
         _loadUsersOnLeave();
@@ -1217,12 +1224,13 @@ class _DashboardPageState extends State<DashboardPage> {
       }).toList();
       final hasPendingRequest = pendingRequests.isNotEmpty;
 
-      final bool showCheckIn = status.canCheckIn ?? false;
-      final bool showCheckOut = status.canCheckOut ?? false;
+      final bool canCheckIn = status.canCheckIn ?? false;
+      final bool canCheckOut = status.canCheckOut ?? false;
+      final bool hasCheckedIn = status.checkInTime != null && status.checkInTime!.isNotEmpty;
+      final bool hasCheckedOut = status.checkOutTime != null && status.checkOutTime!.isNotEmpty;
       final bool isProcessing =
           selfAttendanceController.isCheckInProcessing.value ||
           selfAttendanceController.isCheckOutProcessing.value;
-
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -1333,44 +1341,35 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: 16),
             Row(
               children: <Widget>[
-                if (showCheckIn)
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: isProcessing
-                          ? null
-                          : selfAttendanceController.checkIn,
-                      child: isProcessing
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Check in'),
-                    ),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: (isProcessing || !canCheckIn || hasCheckedIn)
+                        ? null
+                        : selfAttendanceController.checkIn,
+                    child: isProcessing && !hasCheckedIn
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Check in'),
                   ),
-                if (showCheckIn && showCheckOut) const SizedBox(width: 12),
-                if (showCheckOut)
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: isProcessing
-                          ? null
-                          : selfAttendanceController.checkOut,
-                      child: isProcessing
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Check out'),
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: (isProcessing || !canCheckOut || hasCheckedOut)
+                        ? null
+                        : selfAttendanceController.checkOut,
+                    child: isProcessing && hasCheckedIn && !hasCheckedOut
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Check out'),
                   ),
-                if (!showCheckIn && !showCheckOut)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: null,
-                      child: const Text('Completed'),
-                    ),
-                  ),
+                ),
               ],
             ),
           ],

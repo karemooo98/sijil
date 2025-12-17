@@ -144,10 +144,22 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
   }
 
   @override
-  Future<void> onlineCheckIn() => _api.onlineCheckIn();
+  Future<void> onlineCheckIn({
+    required double latitude,
+    required double longitude,
+  }) => _api.onlineCheckIn(
+        latitude: latitude,
+        longitude: longitude,
+      );
 
   @override
-  Future<void> onlineCheckOut() => _api.onlineCheckOut();
+  Future<void> onlineCheckOut({
+    required double latitude,
+    required double longitude,
+  }) => _api.onlineCheckOut(
+        latitude: latitude,
+        longitude: longitude,
+      );
 
   @override
   Future<AttendanceRecord> updateAttendance({

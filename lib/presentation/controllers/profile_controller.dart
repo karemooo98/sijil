@@ -38,7 +38,11 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadProfile();
+    // Only load profile if user is authenticated
+    final AuthController authController = Get.find<AuthController>();
+    if (authController.isAuthenticated) {
+      loadProfile();
+    }
   }
 
   Future<void> loadProfile() async {

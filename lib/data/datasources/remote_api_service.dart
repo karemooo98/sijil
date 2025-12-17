@@ -359,12 +359,30 @@ class RemoteApiService {
     return Map<String, dynamic>.from(response as Map);
   }
 
-  Future<void> onlineCheckIn() async {
-    await _client.post('/api/v1/attendance/online/check-in');
+  Future<void> onlineCheckIn({
+    required double latitude,
+    required double longitude,
+  }) async {
+    await _client.post(
+      '/api/v1/attendance/online/check-in',
+      data: <String, dynamic>{
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    );
   }
 
-  Future<void> onlineCheckOut() async {
-    await _client.post('/api/v1/attendance/online/check-out');
+  Future<void> onlineCheckOut({
+    required double latitude,
+    required double longitude,
+  }) async {
+    await _client.post(
+      '/api/v1/attendance/online/check-out',
+      data: <String, dynamic>{
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    );
   }
 
   Future<JsonMap> getMySummary({DateTime? from, DateTime? to}) async {

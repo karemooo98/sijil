@@ -25,9 +25,15 @@ abstract interface class AttendanceRepository {
 
   Future<List<MyAttendanceRecord>> getMyAttendanceHistory({int limit});
 
-  Future<void> onlineCheckIn();
+  Future<void> onlineCheckIn({
+    required double latitude,
+    required double longitude,
+  });
 
-  Future<void> onlineCheckOut();
+  Future<void> onlineCheckOut({
+    required double latitude,
+    required double longitude,
+  });
 
   Future<AttendanceRecord> updateAttendance({
     required int? recordId,

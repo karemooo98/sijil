@@ -5,6 +5,12 @@ class OnlineCheckOutUseCase {
 
   final AttendanceRepository _repository;
 
-  Future<void> call() => _repository.onlineCheckOut();
+  Future<void> call({
+    required double latitude,
+    required double longitude,
+  }) => _repository.onlineCheckOut(
+        latitude: latitude,
+        longitude: longitude,
+      );
 }
 

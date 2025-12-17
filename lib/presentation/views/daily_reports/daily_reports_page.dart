@@ -18,12 +18,14 @@ class DailyReportsPage extends StatelessWidget {
     final bool isManager = userRole == 'manager';
     final bool canViewAll = isAdmin || isManager;
 
-    // Load all reports if admin/manager
-    if (canViewAll) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Fetch data every time we enter the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (canViewAll) {
         controller.loadAllReports();
-      });
-    }
+      } else {
+        controller.loadMyReports();
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(),
@@ -214,10 +216,11 @@ class DailyReportsPage extends StatelessWidget {
           ),
           child: Form(
             key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
                 const Text(
                   'Create Daily Report',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -293,24 +296,49 @@ class DailyReportsPage extends StatelessWidget {
                         ? null
                         : () async {
                             if (formKey.currentState?.validate() == true) {
-                              final bool success = await controller.createReport(
-                                date: DateFormat('yyyy-MM-dd').format(selectedDate),
-                                description: descriptionController.text,
-                                hoursWorked: double.parse(hoursController.text),
-                                achievements: achievementsController.text.isEmpty
-                                    ? null
-                                    : achievementsController.text,
-                                challenges: challengesController.text.isEmpty
-                                    ? null
-                                    : challengesController.text,
-                                notes: notesController.text.isEmpty ? null : notesController.text,
-                              );
-                              if (context.mounted) {
-                                Navigator.of(context).pop(success);
-                                if (success) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Report created successfully')),
-                                  );
+                              try {
+                                final bool success = await controller.createReport(
+                                  date: DateFormat('yyyy-MM-dd').format(selectedDate),
+                                  description: descriptionController.text,
+                                  hoursWorked: double.parse(hoursController.text),
+                                  achievements: achievementsController.text.isEmpty
+                                      ? null
+                                      : achievementsController.text,
+                                  challenges: challengesController.text.isEmpty
+                                      ? null
+                                      : challengesController.text,
+                                  notes: notesController.text.isEmpty ? null : notesController.text,
+                                );
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(success);
+                                  if (success) {
+                                    // Delay refresh to allow dialog to fully close
+                                    Future.delayed(const Duration(milliseconds: 300), () {
+                                      controller.loadMyReports();
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Report created successfully')),
+                                    );
+                                  }
+                                }
+                              } catch (e) {
+                                // Extract error message before closing dialog
+                                final String errorMsg = e.toString().replaceAll('Exception: ', '').trim();
+                                // Close dialog first so snackbar is visible
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(false);
+                                  // Show error in snackbar after dialog closes
+                                  Future.delayed(const Duration(milliseconds: 500), () {
+                                    // Use Get.snackbar instead of ScaffoldMessenger for better reliability
+                                    Get.snackbar(
+                                      'Error',
+                                      errorMsg,
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                      duration: const Duration(seconds: 3),
+                                    );
+                                  });
                                 }
                               }
                             }
@@ -325,19 +353,25 @@ class DailyReportsPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
 
-    if (result == true) {
+    // Delay disposal to ensure dialog animation completes
+    Future.delayed(const Duration(milliseconds: 500), () {
       descriptionController.dispose();
       hoursController.dispose();
       achievementsController.dispose();
       challengesController.dispose();
       notesController.dispose();
+    });
+
+    if (result == true) {
+      // Report was created successfully
     }
   }
 
@@ -421,14 +455,15 @@ class DailyReportsPage extends StatelessWidget {
         ),
         child: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const Text(
-                'Edit Daily Report',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Text(
+                  'Edit Daily Report',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: descriptionController,
@@ -513,18 +548,24 @@ class DailyReportsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
 
-    if (result == true) {
+    // Delay disposal to ensure dialog animation completes
+    Future.delayed(const Duration(milliseconds: 500), () {
       descriptionController.dispose();
       hoursController.dispose();
       achievementsController.dispose();
       challengesController.dispose();
       notesController.dispose();
+    });
+
+    if (result == true) {
+      // Report was updated successfully
     }
   }
 

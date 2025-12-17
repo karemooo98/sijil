@@ -51,7 +51,8 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
       challenges: challenges,
       notes: notes,
     );
-    return DailyReportModel.fromJson(response);
+    final Map<String, dynamic> data = _extractData(response);
+    return DailyReportModel.fromJson(data);
   }
 
   @override
@@ -71,7 +72,8 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
       challenges: challenges,
       notes: notes,
     );
-    return DailyReportModel.fromJson(response);
+    final Map<String, dynamic> data = _extractData(response);
+    return DailyReportModel.fromJson(data);
   }
 
   @override
@@ -90,6 +92,14 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
       }
     }
     return <Map<String, dynamic>>[];
+  }
+
+  Map<String, dynamic> _extractData(Map<String, dynamic> response) {
+    if (response.containsKey('data') &&
+        response['data'] is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(response['data'] as Map);
+    }
+    return response;
   }
 }
 

@@ -68,18 +68,34 @@ class _RequestsPageState extends State<RequestsPage> {
           sections.addAll(<Widget>[
             Text('My requests', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            ...controller.myRequests.map(_buildRequestTile),
+            if (controller.myRequests.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No requests yet.'),
+              )
+            else
+              ...controller.myRequests.map(_buildRequestTile),
             const SizedBox(height: 24),
           ]);
         }
 
-        sections.addAll(<Widget>[
-          const SizedBox(height: 8),
-          if (controller.pendingApprovals.isEmpty)
-            const Text('No pending requests.')
-          else
-            ...controller.pendingApprovals.map(_buildApprovalTile),
-        ]);
+        // Only show pending approvals section for admins/managers
+        if (controller.canApprove) {
+          sections.addAll(<Widget>[
+            Text(
+              'Pending Approvals',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            if (controller.pendingApprovals.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No pending requests.'),
+              )
+            else
+              ...controller.pendingApprovals.map(_buildApprovalTile),
+          ]);
+        }
 
         return ListView(padding: const EdgeInsets.all(16), children: sections);
       }),
@@ -406,6 +422,9 @@ class _RequestsPageState extends State<RequestsPage> {
     final TextEditingController reasonController = TextEditingController();
     DateTime? selectedDate = DateTime.now();
     DateTimeRange? selectedRange;
+    TimeOfDay? selectedCheckIn;
+    TimeOfDay? selectedCheckOut;
+    bool showDateRangeError = false;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -430,6 +449,20 @@ class _RequestsPageState extends State<RequestsPage> {
                       onChanged: (value) {
                         modalSetState(() {
                           type = value ?? 'day_off';
+                          // Reset fields when switching types
+                          if (type == 'leave') {
+                            selectedRange = null;
+                            // Reset date when switching to leave (leave uses range)
+                            selectedDate = DateTime.now();
+                          } else if (type == 'attendance_correction') {
+                            // Reset range when switching to attendance_correction
+                            selectedRange = null;
+                          } else {
+                            // Reset range and time pickers when switching to day_off
+                            selectedRange = null;
+                            selectedCheckIn = null;
+                            selectedCheckOut = null;
+                          }
                         });
                       },
                       decoration: const InputDecoration(labelText: 'Type'),
@@ -454,19 +487,69 @@ class _RequestsPageState extends State<RequestsPage> {
                     ),
                     const SizedBox(height: 12),
                     if (type == 'leave')
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          selectedRange == null
-                              ? 'Select range'
-                              : '${_dateFormat.format(selectedRange!.start)} - ${_dateFormat.format(selectedRange!.end)}',
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Symbols.calendar_today),
-                          onPressed: () async {
-                            final DateTimeRange? range =
-                                await showDateRangePicker(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              selectedRange == null
+                                  ? 'Select date range *'
+                                  : '${_dateFormat.format(selectedRange!.start)} - ${_dateFormat.format(selectedRange!.end)}',
+                              style: TextStyle(
+                                color: showDateRangeError ? Colors.red : null,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Symbols.calendar_today),
+                              onPressed: () async {
+                                final DateTimeRange? range =
+                                    await showDateRangePicker(
+                                      context: context,
+                                      firstDate: DateTime.now().subtract(
+                                        const Duration(days: 30),
+                                      ),
+                                      lastDate: DateTime.now().add(
+                                        const Duration(days: 365),
+                                      ),
+                                    );
+                                if (range != null) {
+                                  modalSetState(() {
+                                    selectedRange = range;
+                                    showDateRangeError = false;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          if (showDateRangeError)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16, top: 4),
+                              child: Text(
+                                'Date range is required',
+                                style: TextStyle(
+                                  color: Colors.red[700],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
+                      )
+                    else if (type == 'attendance_correction')
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              _dateFormat.format(selectedDate ?? DateTime.now()),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Symbols.calendar_today),
+                              onPressed: () async {
+                                final DateTime? picked = await showDatePicker(
                                   context: context,
+                                  initialDate: selectedDate ?? DateTime.now(),
                                   firstDate: DateTime.now().subtract(
                                     const Duration(days: 30),
                                   ),
@@ -474,13 +557,61 @@ class _RequestsPageState extends State<RequestsPage> {
                                     const Duration(days: 365),
                                   ),
                                 );
-                            if (range != null) {
-                              modalSetState(() {
-                                selectedRange = range;
-                              });
-                            }
-                          },
-                        ),
+                                if (picked != null) {
+                                  modalSetState(() {
+                                    selectedDate = picked;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          InkWell(
+                            onTap: () async {
+                              final TimeOfDay? time = await showTimePicker(
+                                context: context,
+                                initialTime: selectedCheckIn ?? const TimeOfDay(hour: 8, minute: 0),
+                              );
+                              if (time != null) {
+                                modalSetState(() {
+                                  selectedCheckIn = time;
+                                });
+                              }
+                            },
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                selectedCheckIn == null
+                                    ? 'Select check-in time *'
+                                    : selectedCheckIn!.format(context),
+                              ),
+                              trailing: const Icon(Icons.access_time),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () async {
+                              final TimeOfDay? time = await showTimePicker(
+                                context: context,
+                                initialTime: selectedCheckOut ?? const TimeOfDay(hour: 16, minute: 0),
+                              );
+                              if (time != null) {
+                                modalSetState(() {
+                                  selectedCheckOut = time;
+                                });
+                              }
+                            },
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                selectedCheckOut == null
+                                    ? 'Select check-out time *'
+                                    : selectedCheckOut!.format(context),
+                              ),
+                              trailing: const Icon(Icons.access_time),
+                            ),
+                          ),
+                        ],
                       )
                     else
                       ListTile(
@@ -515,10 +646,39 @@ class _RequestsPageState extends State<RequestsPage> {
                         onPressed: controller.isSubmitting.value
                             ? null
                             : () async {
+                                // Validate form fields first
                                 if (formKey.currentState?.validate() != true) {
                                   return;
                                 }
+                                // Validate based on type
+                                if (type == 'leave' && selectedRange == null) {
+                                  // Show validation error for date range
+                                  modalSetState(() {
+                                    showDateRangeError = true;
+                                  });
+                                  return;
+                                }
+                                if (type == 'attendance_correction') {
+                                  if (selectedCheckIn == null || selectedCheckOut == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Please select both check-in and check-out times'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                }
+
                                 try {
+                                  // Format check-in and check-out times
+                                  String? checkInTime;
+                                  String? checkOutTime;
+                                  if (type == 'attendance_correction' && selectedCheckIn != null && selectedCheckOut != null) {
+                                    checkInTime = '${selectedCheckIn!.hour.toString().padLeft(2, '0')}:${selectedCheckIn!.minute.toString().padLeft(2, '0')}';
+                                    checkOutTime = '${selectedCheckOut!.hour.toString().padLeft(2, '0')}:${selectedCheckOut!.minute.toString().padLeft(2, '0')}';
+                                  }
+
                                   await controller.submitRequest(
                                     CreateRequestParams(
                                       type: type,
@@ -528,16 +688,15 @@ class _RequestsPageState extends State<RequestsPage> {
                                           : _dateFormat.format(
                                               selectedDate ?? DateTime.now(),
                                             ),
-                                      startDate: selectedRange != null
-                                          ? _dateFormat.format(
-                                              selectedRange!.start,
-                                            )
+                                      startDate: type == 'leave' && selectedRange != null
+                                          ? _dateFormat.format(selectedRange!.start)
                                           : null,
-                                      endDate: selectedRange != null
-                                          ? _dateFormat.format(
-                                              selectedRange!.end,
-                                            )
+                                      endDate: type == 'leave' && selectedRange != null
+                                          ? _dateFormat.format(selectedRange!.end)
                                           : null,
+                                      checkIn: checkInTime,
+                                      checkOut: checkOutTime,
+                                      leaveType: type == 'leave' ? 'annual' : null,
                                     ),
                                   );
                                   if (context.mounted) {

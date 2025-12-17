@@ -85,6 +85,12 @@ class AuthController extends GetxController {
         LoginParams(email: email.trim(), password: password.trim()),
       );
       session.value = newSession;
+      // Fetch profile after successful login to ensure session is complete
+      try {
+        await fetchProfile();
+      } catch (_) {
+        // Ignore profile fetch errors, continue with navigation
+      }
       Get.offAllNamed(AppRoutes.dashboard);
     } catch (error) {
       errorMessage.value = error.toString();
@@ -111,6 +117,12 @@ class AuthController extends GetxController {
         employeeNumber: employeeNumber?.trim(),
       );
       session.value = newSession;
+      // Fetch profile after successful registration to ensure session is complete
+      try {
+        await fetchProfile();
+      } catch (_) {
+        // Ignore profile fetch errors, continue with navigation
+      }
       Get.offAllNamed(AppRoutes.dashboard);
     } catch (error) {
       errorMessage.value = error.toString();

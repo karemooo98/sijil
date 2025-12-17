@@ -16,6 +16,11 @@ class NotificationsPage extends StatelessWidget {
     final String? userRole = authController.session.value?.user?.role;
     final bool canSend = userRole == 'admin' || userRole == 'manager';
 
+    // Fetch data every time we enter the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadNotifications();
+    });
+
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[

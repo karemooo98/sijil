@@ -26,11 +26,33 @@ class DailyReportModel extends DailyReport {
       hoursWorked = 0.0;
     }
 
+    // Handle id safely (can be null in some cases)
+    int id;
+    final dynamic idValue = json['id'];
+    if (idValue is num) {
+      id = idValue.toInt();
+    } else if (idValue is String) {
+      id = int.tryParse(idValue) ?? 0;
+    } else {
+      id = 0;
+    }
+
+    // Handle user_id safely (can be null in some cases)
+    int userId;
+    final dynamic userIdValue = json['user_id'];
+    if (userIdValue is num) {
+      userId = userIdValue.toInt();
+    } else if (userIdValue is String) {
+      userId = int.tryParse(userIdValue) ?? 0;
+    } else {
+      userId = 0;
+    }
+
     return DailyReportModel(
-      id: (json['id'] as num).toInt(),
-      userId: (json['user_id'] as num).toInt(),
-      date: json['date'] as String,
-      description: json['description'] as String,
+      id: id,
+      userId: userId,
+      date: json['date'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       hoursWorked: hoursWorked,
       achievements: json['achievements'] as String?,
       challenges: json['challenges'] as String?,

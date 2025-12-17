@@ -215,8 +215,8 @@ class _LoginPageState extends State<LoginPage> {
     final Color primaryColor = Theme.of(context).colorScheme.primary;
     final Color surfaceColor = Theme.of(context).colorScheme.surface;
     final bool isTablet = SizerUtil.deviceType == DeviceType.tablet;
-    final double labelFontSize = isTablet ? 14.0 : 10.sp;
-    final double inputFontSize = isTablet ? 16.0 : 12.sp;
+    final double labelFontSize = isTablet ? 14.0 : 5.sp;
+    final double inputFontSize = isTablet ? 16.0 : 5.sp;
     final double iconSize = isTablet ? 24.0 : 18.0;
     final double verticalPadding = isTablet ? 18.0 : 1.4.h;
     final double horizontalPadding = isTablet ? 16.0 : 3.5.w;

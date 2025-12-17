@@ -15,12 +15,14 @@ class OvertimePage extends StatelessWidget {
     final AuthController authController = Get.find<AuthController>();
     final bool isAdmin = authController.session.value?.user?.role == 'admin';
 
-    // Load all overtime if admin
-    if (isAdmin) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Fetch data every time we enter the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isAdmin) {
         controller.loadAllOvertime();
-      });
-    }
+      } else {
+        controller.loadMyOvertime();
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -75,6 +75,11 @@ class ProfilePage extends StatelessWidget {
     final ProfileController controller = Get.find<ProfileController>();
     final Color primaryColor = Theme.of(context).colorScheme.primary;
 
+    // Fetch data every time we enter the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadProfile();
+    });
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Obx(() {
@@ -84,43 +89,70 @@ class ProfilePage extends StatelessWidget {
 
         final user = controller.profile.value;
         if (user == null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Icon(Symbols.person, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(
-                  'Profile not found',
-                  style: Theme.of(context).textTheme.titleLarge,
+          return Column(
+            children: <Widget>[
+              AppBar(
+                title: const Text('Profile'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: controller.loadProfile,
-                  child: const Text('Retry'),
+              ),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      const Icon(Symbols.person, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Profile not found',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: controller.loadProfile,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         }
 
         if (controller.errorMessage.value != null &&
             controller.errorMessage.value!.isNotEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  controller.errorMessage.value ?? 'Unknown error',
-                  style: const TextStyle(color: Colors.red),
+          return Column(
+            children: <Widget>[
+              AppBar(
+                title: const Text('Profile'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: controller.loadProfile,
-                  child: const Text('Retry'),
+              ),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        controller.errorMessage.value ?? 'Unknown error',
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: controller.loadProfile,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         }
 
@@ -128,10 +160,14 @@ class ProfilePage extends StatelessWidget {
           slivers: <Widget>[
             // App Bar with gradient
             SliverAppBar(
-              expandedHeight: 280,
+              expandedHeight: 300,
               pinned: true,
               backgroundColor: primaryColor,
               elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(
@@ -206,13 +242,17 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               // Name
-              Text(
-                user.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  user.name,
+                  textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                ),
               ),
               const SizedBox(height: 4),
               // Email

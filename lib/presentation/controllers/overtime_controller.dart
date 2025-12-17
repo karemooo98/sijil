@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../domain/entities/overtime_record.dart';
 import '../../domain/usecases/get_all_overtime_usecase.dart';
 import '../../domain/usecases/get_my_overtime_usecase.dart';
+import 'auth_controller.dart';
 
 class OvertimeController extends GetxController {
   OvertimeController({
@@ -22,7 +23,11 @@ class OvertimeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadMyOvertime();
+    // Only load overtime if user is authenticated
+    final AuthController authController = Get.find<AuthController>();
+    if (authController.isAuthenticated) {
+      loadMyOvertime();
+    }
   }
 
   Future<void> loadMyOvertime() async {

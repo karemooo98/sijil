@@ -18,12 +18,13 @@ class StandaloneTasksPage extends StatelessWidget {
     final bool isManager = userRole == 'manager';
     final bool canApprove = isAdmin || isManager;
 
-    // Load all tasks if admin/manager
-    if (canApprove) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Fetch data every time we enter the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadMyTasks();
+      if (canApprove) {
         controller.loadAllTasks();
-      });
-    }
+      }
+    });
 
     return DefaultTabController(
       length: canApprove ? 2 : 1,
@@ -53,13 +54,11 @@ class StandaloneTasksPage extends StatelessWidget {
               ),
           ],
         ),
-        floatingActionButton: canApprove
-            ? FloatingActionButton.extended(
-                onPressed: () => _showCreateTaskDialog(context, controller),
-                icon: const Icon(Icons.add_task),
-                label: const Text('New Task'),
-              )
-            : null,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _showCreateTaskDialog(context, controller),
+          icon: const Icon(Icons.add_task),
+          label: const Text('New Task'),
+        ),
         body: TabBarView(
           children: <Widget>[
             _buildMyTasksTab(context, controller),
@@ -341,76 +340,82 @@ class StandaloneTasksPage extends StatelessWidget {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 24,
-            right: 24,
-            top: 24,
-          ),
-          child: Form(
-            key: formKey,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 24,
+                right: 24,
+                top: 24,
+              ),
+              child: Form(
+                key: formKey,
                 child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const Text(
-                  'Create Task',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(DateFormat('MMM d, yyyy').format(selectedDate)),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: () async {
-                      final DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                        lastDate: DateTime.now(),
-                      );
-                      if (picked != null) {
-                        setState(() => selectedDate = picked);
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Task Title *'),
-                  validator: (String? value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Title is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description (optional)'),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: hoursController,
-                  decoration: const InputDecoration(labelText: 'Reported Hours *'),
-                  keyboardType: TextInputType.number,
-                  validator: (String? value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Hours is required';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Invalid number';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Obx(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const Text(
+                        'Create Task',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(DateFormat('MMM d, yyyy').format(selectedDate)),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() => selectedDate = picked);
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: titleController,
+                        decoration: const InputDecoration(labelText: 'Task Title *'),
+                        validator: (String? value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Title is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration: const InputDecoration(labelText: 'Description *'),
+                        maxLines: 3,
+                        validator: (String? value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Description is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: hoursController,
+                        decoration: const InputDecoration(labelText: 'Reported Hours *'),
+                        keyboardType: TextInputType.number,
+                        validator: (String? value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Hours is required';
+                          }
+                          if (double.tryParse(value) == null) {
+                            return 'Invalid number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      Obx(
                         () => Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
@@ -426,55 +431,59 @@ class StandaloneTasksPage extends StatelessWidget {
                                 ),
                               ),
                             FilledButton(
-                    onPressed: controller.isCreating.value
-                        ? null
-                        : () async {
-                            if (formKey.currentState?.validate() == true) {
-                              final bool success = await controller.createTask(
-                                title: titleController.text,
-                                date: DateFormat('yyyy-MM-dd').format(selectedDate),
-                                reportedHours: double.parse(hoursController.text),
-                                description: descriptionController.text.isEmpty
-                                    ? null
-                                    : descriptionController.text,
-                              );
-                              if (context.mounted) {
-                                if (success) {
+                              onPressed: controller.isCreating.value
+                                  ? null
+                                  : () async {
+                                      if (formKey.currentState?.validate() == true) {
+                                        final bool success = await controller.createTask(
+                                          title: titleController.text,
+                                          date: DateFormat('yyyy-MM-dd').format(selectedDate),
+                                          reportedHours: double.parse(hoursController.text),
+                                          description: descriptionController.text.trim(),
+                                        );
+                                        if (context.mounted) {
+                                          if (success) {
                                             Navigator.of(context).pop(true);
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                            // Delay refresh to allow dialog to fully close
+                                            Future.delayed(const Duration(milliseconds: 300), () {
+                                              controller.loadMyTasks();
+                                            });
+                                            ScaffoldMessenger.of(context).showSnackBar(
                                               const SnackBar(
                                                 content: Text('Task created successfully'),
                                                 backgroundColor: Colors.green,
                                               ),
-                                  );
+                                            );
                                           } else {
                                             // Error message is already shown above
-                                }
-                              }
-                            }
-                          },
-                    child: controller.isCreating.value
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Create Task'),
+                                          }
+                                        }
+                                      }
+                                    },
+                              child: controller.isCreating.value
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Text('Create Task'),
                             ),
                           ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
+              ),
             );
           },
-    );
+        );
       },
-    ).whenComplete(() {
-      // Dispose controllers when dialog is dismissed
+    );
+
+    // Delay disposal to ensure dialog animation completes
+    Future.delayed(const Duration(milliseconds: 500), () {
       titleController.dispose();
       descriptionController.dispose();
       hoursController.dispose();
