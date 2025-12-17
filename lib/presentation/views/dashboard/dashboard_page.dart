@@ -1231,6 +1231,35 @@ class _DashboardPageState extends State<DashboardPage> {
       final bool isProcessing =
           selfAttendanceController.isCheckInProcessing.value ||
           selfAttendanceController.isCheckOutProcessing.value;
+      
+      // Check if the status date is today - if not, allow check-in for new day
+      final String todayDate = DateFormat('yyyy-MM-dd').format(now);
+      final bool isToday = status.date == todayDate;
+      
+      // Parse status date to compare
+      DateTime? statusDateTime;
+      try {
+        statusDateTime = DateTime.parse(status.date);
+      } catch (_) {
+        statusDateTime = null;
+      }
+      
+      // Check if it's 5 AM or later today
+      final bool isAfter5AM = now.hour >= 5;
+      
+      // Check if status date is from yesterday or earlier
+      final bool isPreviousDay = statusDateTime != null && 
+          statusDateTime.isBefore(DateTime(now.year, now.month, now.day));
+      
+      // Allow check-in if:
+      // 1. It's a new day (status date is not today) - always allow if backend says canCheckIn
+      // 2. OR it's 5 AM or later today and status date is from yesterday/earlier
+      // 3. OR it's today but no check-in yet and backend says canCheckIn
+      final bool canCheckInToday = canCheckIn && (
+        !isToday || 
+        (isAfter5AM && isPreviousDay) || 
+        !hasCheckedIn
+      );
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -1343,7 +1372,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: <Widget>[
                 Expanded(
                   child: FilledButton(
-                    onPressed: (isProcessing || !canCheckIn || hasCheckedIn)
+                    onPressed: (isProcessing || !canCheckInToday)
                         ? null
                         : selfAttendanceController.checkIn,
                     child: isProcessing && !hasCheckedIn

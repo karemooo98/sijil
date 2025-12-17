@@ -247,6 +247,16 @@ class SelfAttendanceController extends GetxController {
       // Always reload reports to ensure we have the latest data
       await reportController.loadMyReports();
 
+      // Check if check-in was before midnight and it's now a new day
+      // If check-in date is from yesterday (before midnight) and it's now a new day,
+      // use check-in endpoint instead of check-out endpoint
+      final DateTime now = DateTime.now();
+      final String todayDate = DateFormat('yyyy-MM-dd').format(now);
+      final bool checkInDateIsYesterday = status.date != todayDate;
+      
+      // If check-in date is from yesterday, use check-in endpoint instead
+      final bool shouldUseCheckInEndpoint = checkInDateIsYesterday;
+
       // Check if report exists for check-in date (normalize dates for comparison)
       final String checkInDate = status.date; // Format: yyyy-MM-dd
       final bool reportExists = reportController.myReports.any(
@@ -299,11 +309,19 @@ class SelfAttendanceController extends GetxController {
         }
       }
 
-      // If report exists or was created successfully, proceed with check-out
-      await onlineCheckOutUseCase(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
+      // If check-in was before midnight and it's now after midnight, use check-in endpoint
+      // Otherwise, use check-out endpoint
+      if (shouldUseCheckInEndpoint) {
+        await onlineCheckInUseCase(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      } else {
+        await onlineCheckOutUseCase(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      }
 
       // Show success message
       Get.snackbar(
